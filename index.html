@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Deep Dive | Ocean Descent Experience</title>
+    <meta
+      name="description"
+      content="A scroll-driven journey from the sunlit surface to the 6,000-meter abyssal depths. Experience marine life, pressure shifts, and abyssal darkness."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" class="loading-screen" aria-live="polite">
+      <div class="loader-content">
+        <div class="sonar-wrapper">
+          <div class="sonar-ring r1"></div>
+          <div class="sonar-ring r2"></div>
+          <div class="sonar-ring r3"></div>
+          <div class="sonar-center">
+            <svg class="sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 3v6m0 6v6M3 12h6m6 0h6"></path>
+              <circle cx="12" cy="12" r="3" fill="#ffcc4d"></circle>
+            </svg>
+          </div>
+        </div>
+
+        <h1 class="loader-title">THE DEEP DIVE</h1>
+        <p class="loader-status" id="loader-status-text">Pressurizing Submersible...</p>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="loader-progress-bar"></div>
+        </div>
+        <div class="loader-percent" id="loader-percent-text">0%</div>
+      </div>
+    </div>
+
+    <!-- MAIN SCROLL CONTAINER -->
+    <div id="app" class="app-root">
+      <!-- FIXED TOP HUD -->
+      <header class="top-hud">
+        <div class="brand">
+          <span class="sonar-dot"></span>
+          <span class="brand-title">THE DEEP DIVE</span>
+          <span class="depth-tag" id="hud-top-depth">0 m</span>
+        </div>
+
+        <div class="top-controls">
+          <button id="btn-leaderboard-toggle" class="btn-hud" aria-label="Open Leaderboard">
+            <svg class="icon-trophy" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1c1.92-.37 3.44-1.89 3.61-3.96C19.08 11.63 21 9.55 21 7V5c0-1.1-.9-2-2-2zm-14 3V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+            </svg>
+            <span class="btn-text">Logbook</span>
+            <span class="badge-record" id="badge-record-depth">0m</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- FIXED DEPTH COMPUTER (RIGHT SIDE) -->
+      <aside class="depth-computer" id="depth-computer" aria-label="Dive Computer Telemetry">
+        <div class="computer-header">
+          <span class="label-telem">TELEMETRY</span>
+          <span class="blink-rec">LIVE</span>
+        </div>
+
+        <!-- ZONE INDICATOR -->
+        <div class="zone-display" id="zone-display">
+          <div class="zone-tag">CURRENT ZONE</div>
+          <div class="zone-name-wrapper">
+            <span class="zone-name" id="hud-zone-name">SUNLIGHT</span>
+          </div>
+          <div class="zone-scientific" id="hud-zone-sub">Epipelagic • 0–200 m</div>
+        </div>
+
+        <!-- BIG DIGITAL READOUT -->
+        <div class="depth-digital">
+          <div class="depth-num-group">
+            <span class="depth-val" id="hud-depth-number">0</span>
+            <span class="depth-unit">m</span>
+          </div>
+          <div class="depth-feet" id="hud-depth-feet">0 ft</div>
+        </div>
+
+        <!-- VERTICAL RULER GAUGE -->
+        <div class="vertical-gauge-wrapper">
+          <div class="gauge-scale">
+            <span class="tick-label t-0">0m</span>
+            <span class="tick-label t-200">200m</span>
+            <span class="tick-label t-1000">1000m</span>
+            <span class="tick-label t-4000">4000m</span>
+            <span class="tick-label t-6000">6000m</span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-fill" id="gauge-fill-bar"></div>
+            <div class="gauge-cursor" id="gauge-cursor"></div>
+          </div>
+        </div>
+
+        <!-- SECONDARY TELEMETRY -->
+        <div class="telemetry-grid">
+          <div class="telem-item">
+            <span class="telem-lbl">PRESSURE</span>
+            <span class="telem-val" id="telem-pressure">1.0 atm</span>
+          </div>
+          <div class="telem-item">
+            <span class="telem-lbl">TEMP</span>
+            <span class="telem-val" id="telem-temp">24.5 °C</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- PINNED CANVAS WRAPPER -->
+      <div class="pinned-viewport" id="pinned-viewport">
+        <!-- 1. VIDEO FRAME CANVAS -->
+        <canvas id="canvas-frames" class="canvas-layer"></canvas>
+
+
+        <!-- 3. DYNAMIC DEPTH VIGNETTE -->
+        <div class="vignette-overlay" id="vignette-overlay"></div>
+
+        <!-- 4. NARRATIVE / CREATURE OVERLAYS -->
+        <div class="story-overlay" id="story-overlay">
+          <!-- SURFACE INTRO -->
+          <article class="story-card active" id="card-surface" data-card="surface-intro">
+            <div class="card-eyebrow">0 METERS • SEA LEVEL</div>
+            <h2 class="card-title">The Deep Dive</h2>
+            <p class="card-lead">Descend through ocean layers into the unexplored abyss.</p>
+            <div class="scroll-cue">
+              <span class="cue-text">Scroll to descend</span>
+              <div class="cue-arrow">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
+                  <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
+                </svg>
+              </div>
+            </div>
+          </article>
+
+          <!-- SUNLIGHT CREATURE: TURTLE -->
+          <article class="story-card" id="card-turtle" data-card="creature-turtle">
+            <div class="card-pill">SUNLIGHT ZONE • 160 m</div>
+            <h2 class="card-title">Green Sea Turtle</h2>
+            <div class="card-latin">Chelonia mydas</div>
+            <p class="card-text">
+              Gliding effortlessly through sun-drenched epipelagic waters, these ancient navigators can slow their heart rate to a single beat every nine minutes on deep foraging dives.
+            </p>
+          </article>
+
+          <!-- TWILIGHT CREATURE: JELLYFISH -->
+          <article class="story-card" id="card-jellyfish" data-card="creature-jellyfish">
+            <div class="card-pill">TWILIGHT ZONE • 650 m</div>
+            <h2 class="card-title">Bioluminescent Jellyfish</h2>
+            <div class="card-latin">Ctenophora & Atolla</div>
+            <p class="card-text">
+              Where solar rays dissolve into deep cobalt shadows, comb jellies trigger cascading rings of cold bioluminescent light, turning predator attacks into dazzling defense alarms.
+            </p>
+          </article>
+
+          <!-- MIDNIGHT CREATURE: ANGLERFISH -->
+          <article class="story-card" id="card-anglerfish" data-card="creature-anglerfish">
+            <div class="card-pill">MIDNIGHT ZONE • 2,600 m</div>
+            <h2 class="card-title">Deep Sea Anglerfish</h2>
+            <div class="card-latin">Melanocetus johnsonii</div>
+            <p class="card-text">
+              In complete, frozen blackness under hundreds of atmospheres of crushing pressure, the female anglerfish dangles a glowing esca beacon populated by symbiotic bacteria to snare prey.
+            </p>
+          </article>
+
+          <!-- ABYSS CREATURE: GULPER EEL -->
+          <article class="story-card" id="card-gulpereel" data-card="creature-gulpereel">
+            <div class="card-pill">ABYSSAL ZONE • 4,800 m</div>
+            <h2 class="card-title">Pelican Gulper Eel</h2>
+            <div class="card-latin">Eurypharynx pelecanoides</div>
+            <p class="card-text">
+              Dwelling in the immense pressure of the abyssopelagic realm, its cavernous jaws expand like a vast net to engulf prey far exceeding its body volume in a single swallow.
+            </p>
+          </article>
+
+          <!-- BOTTOM REACHED (6000 m) -->
+          <article class="story-card card-bottom" id="card-bottom" data-card="bottom-achievement">
+            <div class="treasure-beacon">
+              <div class="beacon-pulse"></div>
+              <svg class="beacon-icon" viewBox="0 0 24 24" fill="#ffcc4d">
+                <path d="M12 2L1 21h22L12 2zm0 4.2L19.5 19h-15L12 6.2zM11 10h2v4h-2zm0 6h2v2h-2z"/>
+              </svg>
+            </div>
+            <div class="card-pill pill-gold">CHALLENGER ABYSS • 6,000 m</div>
+            <h2 class="card-title title-gold">You Reached The Bottom</h2>
+            <p class="card-text">
+              You have survived the descent to 6,000 meters. The hydrostatic pressure exceeds 600 atmospheres. Enter your name to register your dive in the global explorer logbook.
+            </p>
+
+            <form id="form-submit-score" class="submit-score-form">
+              <div class="input-row">
+                <input
+                  type="text"
+                  id="input-diver-name"
+                  class="input-name"
+                  placeholder="Explorer Name (1–20 chars)"
+                  maxlength="20"
+                  required
+                  autocomplete="off"
+                />
+                <button type="submit" id="btn-submit-score" class="btn-gold">
+                  Log Descent
+                </button>
+              </div>
+              <div id="submit-feedback" class="submit-feedback" aria-live="polite"></div>
+            </form>
+
+            <button id="btn-view-board-bottom" class="btn-link">
+              View Expedition Logbook →
+            </button>
+          </article>
+        </div>
+      </div>
+
+      <!-- SPACER TO DRIVE SCROLL (8 SCREENS) -->
+      <div id="scroll-spacer" class="scroll-spacer"></div>
+
+      <!-- LEADERBOARD MODAL / DRAWER -->
+      <div id="leaderboard-modal" class="modal-backdrop" aria-hidden="true">
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <div class="modal-header">
+            <div>
+              <span class="modal-tag">EXPEDITION ARCHIVE</span>
+              <h2 id="modal-title" class="modal-title">Global Dive Logbook</h2>
+            </div>
+            <button id="btn-modal-close" class="btn-close" aria-label="Close Logbook">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- CURRENT DIVER SUMMARY -->
+          <div class="diver-summary-card">
+            <div class="summary-col">
+              <span class="summary-lbl">CURRENT SESSION MAX</span>
+              <span class="summary-val gold-text" id="summary-max-depth">0 m</span>
+            </div>
+            <div class="summary-col">
+              <span class="summary-lbl">DEEPEST ZONE REACHED</span>
+              <span class="summary-val" id="summary-max-zone">Sunlight</span>
+            </div>
+          </div>
+
+          <!-- TABLE -->
+          <div class="table-wrapper">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th scope="col">Rank</th>
+                  <th scope="col">Explorer</th>
+                  <th scope="col">Max Depth</th>
+                  <th scope="col">Date</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-tbody">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="modal-footer">
+            <span class="footer-note">Telemetry verified via NestJS & SQLite backend</span>
+            <button id="btn-modal-close-footer" class="btn-secondary">Close Log</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
